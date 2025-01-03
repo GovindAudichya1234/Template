@@ -139,8 +139,20 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
             current_row += 1
         
         # Add formula linking percentage to the target sheets
-        rubrics_sheet[f"H{current_row}"] = f'={sheet.title}!{col_letter}{percentage_row}'
-        report_sheet[f"B{current_row}"] = f'={sheet.title}!{col_letter}{percentage_row}'
+        rubrics_sheet[f"H{current_row}"] = (
+                f"=IFERROR("
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 20, 1, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 40, 2, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 60, 3, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 80, 4, 5)))), \"\")"
+            )
+        report_sheet[f"B{current_row}"] = (
+                f"=IFERROR("
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 20, 1, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 40, 2, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 60, 3, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 80, 4, 5)))), \"\")"
+            )
         
         current_row += 1  # Move to the next row in the target sheets
 
