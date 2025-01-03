@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from openpyxl.utils import column_index_from_string, get_column_letter
+from openpyxl.styles import Alignment, Border, Side, Font, PatternFill
 from openpyxl.formula.translate import Translator
 from openpyxl.worksheet.datavalidation import DataValidation
 import os
@@ -76,7 +77,76 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
 
 
     # Save workbook
- # Save workbook
+    # Copy additional sheets from AQR file
+    aqr_wb = load_workbook('AMT_AQR.xlsx')
+
+    for sheet_name in ["AQR Rubrics", "Report Format"]:
+        if sheet_name in aqr_wb.sheetnames:
+            if sheet_name in wb.sheetnames:
+                del wb[sheet_name]
+            source_sheet = aqr_wb[sheet_name]
+            target_sheet = wb.create_sheet(title=sheet_name)
+
+            # Copy data and formatting manually
+            for row in source_sheet.iter_rows():
+                for cell in row:
+                    target_cell = target_sheet.cell(row=cell.row, column=cell.column, value=cell.value)
+                    if cell.has_style:
+                        target_cell._style = cell._style
+    def beautify_sheet(sheet, title_row=1):
+        # Apply header formatting
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill("solid", fgColor="4F81BD")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        thin_border = Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin")
+        )
+
+        for cell in sheet[title_row]:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+
+        # Adjust column widths
+        for column_cells in sheet.columns:
+            max_length = 0
+            column_letter = column_cells[0].column_letter
+            for cell in column_cells:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            sheet.column_dimensions[column_letter].width = max_length + 2
+    # Dynamically link percentages to "AQR Rubrics" and "Report Format" sheets
+    # Dynamically link percentages to "AQR Rubrics" and "Report Format" sheets
+        # Dynamically link percentages to "AQR Rubrics" and "Report Format" sheets
+    beautify_sheet(wb["AQR Rubrics"])
+    beautify_sheet(wb["Report Format"])
+    rubrics_sheet = wb["AQR Rubrics"]
+    report_sheet = wb["Report Format"]
+
+    current_row = 4  # Start row for the target sheets
+    for col_idx in range(start_col_index, end_col_index + 1):
+        col_letter = get_column_letter(col_idx)
+        
+        # Skip row 13 but adjust the mapping
+        if current_row == 13:
+            current_row += 1
+        
+        # Add formula linking percentage to the target sheets
+        rubrics_sheet[f"H{current_row}"] = f'={sheet.title}!{col_letter}{percentage_row}'
+        report_sheet[f"B{current_row}"] = f'={sheet.title}!{col_letter}{percentage_row}'
+        
+        current_row += 1  # Move to the next row in the target sheets
+
+
+
+    # Save workbook
     output_path = file_path.replace(".xlsx", "_processed.xlsx")
     wb.save(output_path)
     return output_path
