@@ -165,6 +165,14 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
 
 # Streamlit app
 st.title("Formula Application Tool")
+st.write("Instructions for using the tool:")
+st.write("1. Upload an Excel file.")
+st.write("2. Check if the provided AMT file have all the necessary columns like Question Accuracy,Learning Outcome Accuracy,Repetition of PR Question,Question Distribution,Answer Accuracy,Answer Explanation Accuracy,Tagging bloom level,Tagging complexity level,Distractors,Topic Tagging,Language and Grammar,Plagiarism,Copy Editing")
+st.write("3. If any column is missing add the column in the AMT file before uploading and it should be in the same order as mentioned above.")
+st.write("4. Enter the column range and row range where you want to apply the formulas. (for e.g : Question Accuracy (AQ) to Copy Editing (BC) )")
+st.write("5. Enter the row range where you want to apply the formulas. (for e.g : 3 to 38)")
+st.write("6. Enter the column where the review specific comment is present. (for e.g : AK)")
+st.write("7. Click on 'Apply Formula' button to apply the formulas.")
 
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx"])
 if uploaded_file:
