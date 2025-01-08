@@ -241,7 +241,9 @@ st.write("3. If any column is missing add the column in the AMT file before uplo
 st.write("4. Enter the column range and row range where you want to apply the formulas. (for e.g : Question Accuracy (AQ) to Copy Editing (BC) )")
 st.write("5. Enter the row range where you want to apply the formulas. (for e.g : 3 to 38)")
 st.write("6. Enter the column where the review specific comment is present. (for e.g : AK)")
-st.write("7. Click on 'Apply Formula' button to apply the formulas.")
+st.write("7. For R2 and R3 Kindly add the extra column like R2 or R3. Check the Criteria range As you add the column the range will change.")
+st.write("8. Click on 'Apply Formula' button to apply the formulas.")
+
 
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx"])
 if uploaded_file:
