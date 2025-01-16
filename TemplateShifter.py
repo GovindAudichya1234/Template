@@ -59,20 +59,21 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col,Rev):
     
     # Define formulas
     formulas = [
-        f'=IF(SUM(ISNUMBER(SEARCH("Qs:", {review_col}ROW)) + ISNUMBER(SEARCH("QA:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("LO:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Repq:", {review_col}ROW)) + ISNUMBER(SEARCH("QR:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Qdis:", {review_col}ROW)) + ISNUMBER(SEARCH("QD:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("AA:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("AE:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Bloom:", {review_col}ROW)) + ISNUMBER(SEARCH("BT:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Comp:", {review_col}ROW)) + ISNUMBER(SEARCH("CT:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Dis:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("TopicT:", {review_col}ROW)) + ISNUMBER(SEARCH("TT:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Lang:", {review_col}ROW)) + ISNUMBER(SEARCH("LG:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Plag:", {review_col}ROW)) + ISNUMBER(SEARCH("LG:", {review_col}ROW)))>0, "No", "Yes")',
-        f'=IF(SUM(ISNUMBER(SEARCH("Ced:", {review_col}ROW)) + ISNUMBER(SEARCH("CE:", {review_col}ROW)))>0, "No", "Yes")'
+        f'=IF(SUM(ISNUMBER(SEARCH("Qs:", {review_col}ROW)) + ISNUMBER(SEARCH("QA:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("LO:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Repq:", {review_col}ROW)) + ISNUMBER(SEARCH("QR:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Qdis:", {review_col}ROW)) + ISNUMBER(SEARCH("QD:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("AA:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("AE:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Bloom:", {review_col}ROW)) + ISNUMBER(SEARCH("BT:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Comp:", {review_col}ROW)) + ISNUMBER(SEARCH("CT:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Dis:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("TopicT:", {review_col}ROW)) + ISNUMBER(SEARCH("TT:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Lang:", {review_col}ROW)) + ISNUMBER(SEARCH("LG:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Plag:", {review_col}ROW)) + ISNUMBER(SEARCH("LG:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+        f'=IF(SUM(ISNUMBER(SEARCH("Ced:", {review_col}ROW)) + ISNUMBER(SEARCH("CE:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")'
     ]
+
 
     # Apply formulas to the specified range
     # Apply formulas to the specified range
