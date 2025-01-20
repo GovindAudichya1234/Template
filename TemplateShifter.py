@@ -19,6 +19,46 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col,Rev):
 
     start_col_index = column_index_from_string(start_col)
     end_col_index = column_index_from_string(end_col)
+
+    import streamlit as st
+import pandas as pd
+from openpyxl import load_workbook, Workbook
+from openpyxl.utils import column_index_from_string, get_column_letter
+from openpyxl.styles import Alignment, Border, Side, Font, PatternFill
+from openpyxl.formula.translate import Translator
+from openpyxl.worksheet.datavalidation import DataValidation
+import os
+import uuid
+
+def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
+    # Load workbook
+    wb = load_workbook(file_path)
+    sheet = wb.active
+
+    # Parse column range and row range
+    start_col, end_col = col_range.split('-')
+    start_row, end_row = map(int, row_range.split('-'))
+
+    start_col_index = column_index_from_string(start_col)
+    end_col_index = column_index_from_string(end_col)
+
+    # Delete data in the specified criteria column range from row 2 to end_row
+    for col_idx in range(start_col_index, end_col_index + 1):
+        col_letter = get_column_letter(col_idx)
+        for row_idx in range(2, end_row + 1):  # Deleting data from row 2 to end_row
+            sheet[f"{col_letter}{row_idx}"].value = None
+
+    # Define new headers to be written in row 2
+    headers = [
+        "Question Accuracy", "Question Distribution", "Answer Accuracy", "Answer Explanation",
+        "Tagging bloom level", "Tagging complexity level", "Distractors", "Learning Outcome",
+        "No Repetition of PR Questions", "Topic Tagging", "Language and Grammar",
+        "No Plagiarism", "Copy Editing"
+    ]
+    
+    # Write headers in row 2
+    for col_idx, header in zip(range(start_col_index, end_col_index + 1), headers):
+        sheet[f"{get_column_letter(col_idx)}2"].value = header
     
     saved_values = {"B": {}, "C": {},"H":{},"I":{}}  # Dictionary to store values for columns B and C
     if Rev in [ "R2", "R3"]:
@@ -236,12 +276,11 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col,Rev):
 st.title("Formula Application Tool")
 st.write("Instructions for using the tool:")
 st.write("1. Upload an Excel file.")
-st.write("2. Check if the provided AMT file have all the necessary columns like Question Accuracy ,Question Distribution ,Answer Accuracy ,Answer Explanation Accuracy ,Tagging bloom level ,Tagging complexity level ,Distractors ,Learning Outcome Accuracy ,No Repetition of PR Question Topic Tagging ,Language and Grammar ,No Plagiarism ,Copy Editing")
+st.write("2. Check if the provided AMT file have all the necessary columns like Question Accuracy ,Learning Outcome Accuracy ,Repetition of PR Question ,Question Distribution ,Answer Accuracy ,Answer Explanation Accuracy ,Tagging bloom level ,Tagging complexity level ,Distractors ,Topic Tagging ,Language and Grammar ,Plagiarism ,Copy Editing")
 st.write("3. If any column is missing add the column in the AMT file before uploading and it should be in the same order as mentioned above.")
 st.write("4. Enter the column range and row range where you want to apply the formulas. (for e.g : Question Accuracy (AQ) to Copy Editing (BC) )")
 st.write("5. Enter the row range where you want to apply the formulas. (for e.g : 3 to 38)")
 st.write("6. Enter the column where the review specific comment is present. (for e.g : AK)")
-st.write("7. ")
 st.write("7. Click on 'Apply Formula' button to apply the formulas.")
 
 uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx"])
