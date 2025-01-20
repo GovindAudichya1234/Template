@@ -8,7 +8,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 import os
 import uuid
 
-def apply_formulas_to_range(file_path, col_range, row_range, review_col):
+def apply_formulas_to_range(file_path, col_range, row_range, review_col,Rev):
     # Load workbook
     wb = load_workbook(file_path)
     sheet = wb.active
@@ -19,7 +19,44 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
 
     start_col_index = column_index_from_string(start_col)
     end_col_index = column_index_from_string(end_col)
+    
+    saved_values = {"B": {}, "C": {},"H":{},"I":{}}  # Dictionary to store values for columns B and C
+    if Rev in [ "R2", "R3"]:
+        repowb = load_workbook(file_path,data_only=True)
+        rub = repowb['AQR Rubrics']
+        repo = repowb['Report Format']
+        for col_idx in range(start_col_index, end_col_index + 1):
+            col_letter = get_column_letter(col_idx)
+            for row_idx in range(start_row, end_row + 1):
+                cell = sheet[f"{col_letter}{row_idx}"]
+                cell.value = None  # Clear the cell's value, removing formulas or text
 
+        if Rev in ["R2", "R3"]:
+            # Copy existing plain values from Column B
+            for row_idx in range(start_row, end_row + 1):
+                cell = repo[f"B{row_idx}"]
+                saved_values["B"][row_idx] = cell.value
+            for row_idx in range(start_row, end_row + 1):
+                cell = rub[f"H{row_idx}"]
+                saved_values["H"][row_idx] = cell.value  # Extract the plain value
+
+        if Rev == "R3":
+            # Copy existing plain values from Column C
+            for row_idx in range(start_row, end_row + 1):
+                cell = repo[f"B{row_idx}"]
+                saved_values["B"][row_idx] = cell.value
+            for row_idx in range(start_row, end_row + 1):
+                cell = repo[f"C{row_idx}"]
+                saved_values["C"][row_idx] = cell.value
+            for row_idx in range(start_row, end_row + 1):
+                cell = rub[f"H{row_idx}"]
+                saved_values["H"][row_idx] = cell.value
+            for row_idx in range(start_row, end_row + 1):
+                cell = rub[f"I{row_idx}"]
+                saved_values["I"][row_idx] = cell.value
+        
+
+    
     # Define formulas
     formulas = [
     f'=IF(SUM(ISNUMBER(SEARCH("Qs:", {review_col}ROW)) + ISNUMBER(SEARCH("QA:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
@@ -36,7 +73,6 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
     f'=IF(SUM(ISNUMBER(SEARCH("Plag:", {review_col}ROW)) + ISNUMBER(SEARCH("LG:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("Ced:", {review_col}ROW)) + ISNUMBER(SEARCH("CE:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")'
 ]
-
 
     # Apply formulas to the specified range
     # Apply formulas to the specified range
@@ -130,7 +166,39 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
     beautify_sheet(wb["Report Format"])
     rubrics_sheet = wb["AQR Rubrics"]
     report_sheet = wb["Report Format"]
+    if Rev == "R1":
+        RubSheetCol = 'H'
+        RepSheetCol = 'B'
+    elif Rev == "R2":
+        RubSheetCol = 'I'
+        RepSheetCol = 'C'
+    else:
+        RubSheetCol = 'J'
+        RepSheetCol = 'D'
 
+    if Rev == "R2":
+        # Restore Column B values
+        for row_idx, value in saved_values["B"].items():
+            if value is not None:
+                report_sheet[f"B{row_idx}"].value = value
+        for row_idx, value in saved_values["H"].items():
+            if value is not None:
+                rubrics_sheet[f"H{row_idx}"].value = value
+
+    if Rev == "R3":
+        # Restore Column C values
+        for row_idx, value in saved_values["B"].items():
+            if value is not None:
+                report_sheet[f"B{row_idx}"].value = value
+        for row_idx, value in saved_values["C"].items():
+            if value is not None:
+                report_sheet[f"C{row_idx}"].value = value
+        for row_idx, value in saved_values["H"].items():
+            if value is not None:
+                rubrics_sheet[f"H{row_idx}"].value = value
+        for row_idx, value in saved_values["I"].items():
+            if value is not None:
+                rubrics_sheet[f"I{row_idx}"].value = value
     current_row = 4  # Start row for the target sheets
     for col_idx in range(start_col_index, end_col_index + 1):
         col_letter = get_column_letter(col_idx)
@@ -140,14 +208,14 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
             current_row += 1
         
         # Add formula linking percentage to the target sheets
-        rubrics_sheet[f"H{current_row}"] = (
+        rubrics_sheet[f"{RubSheetCol}{current_row}"] = (
                 f"=IFERROR("
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 30, 1, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 50, 2, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 70, 3, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 90, 4, 5)))), \"\")"
-            )
-        report_sheet[f"B{current_row}"] = (
+        )
+        report_sheet[f"{RepSheetCol}{current_row}"] = (
                 f"=IFERROR("
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 30, 1, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 50, 2, "
@@ -168,7 +236,7 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col):
 st.title("Formula Application Tool")
 st.write("Instructions for using the tool:")
 st.write("1. Upload an Excel file.")
-st.write("2. Check if the provided AMT file have all the necessary columns like Question Accuracy,Learning Outcome Accuracy,Repetition of PR Question,Question Distribution,Answer Accuracy,Answer Explanation Accuracy,Tagging bloom level,Tagging complexity level,Distractors,Topic Tagging,Language and Grammar,Plagiarism,Copy Editing")
+st.write("2. Check if the provided AMT file have all the necessary columns like Question Accuracy ,Learning Outcome Accuracy ,Repetition of PR Question ,Question Distribution ,Answer Accuracy ,Answer Explanation Accuracy ,Tagging bloom level ,Tagging complexity level ,Distractors ,Topic Tagging ,Language and Grammar ,Plagiarism ,Copy Editing")
 st.write("3. If any column is missing add the column in the AMT file before uploading and it should be in the same order as mentioned above.")
 st.write("4. Enter the column range and row range where you want to apply the formulas. (for e.g : Question Accuracy (AQ) to Copy Editing (BC) )")
 st.write("5. Enter the row range where you want to apply the formulas. (for e.g : 3 to 38)")
@@ -180,7 +248,7 @@ if uploaded_file:
     col_range = st.text_input("Enter Criteria Column Range (e.g., A-Z):")
     row_range = st.text_input("Enter Row Range (e.g., 3-38):")
     review_col = st.text_input("Enter Review Specific Comment Column (e.g., AK):")
-
+    target_column_selection = st.selectbox("Select R1, R2, or R3:", ["R1", "R2", "R3"])
     if st.button("Apply Formula"):
         if col_range and row_range and review_col:
             # Save uploaded file to a temporary unique path
@@ -191,7 +259,7 @@ if uploaded_file:
 
             try:
                 # Apply formulas and generate the output file
-                output_path = apply_formulas_to_range(temp_file_path, col_range, row_range, review_col)
+                output_path = apply_formulas_to_range(temp_file_path, col_range, row_range, review_col,target_column_selection)
 
                 # Generate output file name using uploaded file name
                 output_file_name = uploaded_file.name.replace(".xlsx", "_processed.xlsx")
