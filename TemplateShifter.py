@@ -246,6 +246,8 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
         # Skip row 13 but adjust the mapping
         if current_row == 11:
             current_row += 1
+        if current_row == 16:
+            current_row += 1
         
         # Add formula linking percentage to the target sheets
         rubrics_sheet[f"{RubSheetCol}{current_row}"] = (
