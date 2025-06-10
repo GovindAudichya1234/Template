@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 from openpyxl import load_workbook, Workbook
@@ -8,29 +9,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 import os
 import uuid
 
-def apply_formulas_to_range(file_path, col_range, row_range, review_col,Rev):
-    # Load workbook
-    wb = load_workbook(file_path)
-    sheet = wb.active
-
-    # Parse column range and row range
-    start_col, end_col = col_range.split('-')
-    start_row, end_row = map(int, row_range.split('-'))
-
-    start_col_index = column_index_from_string(start_col)
-    end_col_index = column_index_from_string(end_col)
-
-    import streamlit as st
-import pandas as pd
-from openpyxl import load_workbook, Workbook
-from openpyxl.utils import column_index_from_string, get_column_letter
-from openpyxl.styles import Alignment, Border, Side, Font, PatternFill
-from openpyxl.formula.translate import Translator
-from openpyxl.worksheet.datavalidation import DataValidation
-import os
-import uuid
-
-def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
+def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,review_status_col):
     # Load workbook
     wb = load_workbook(file_path)
     sheet = wb.active
@@ -51,7 +30,7 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
     # Define new headers to be written in row 2
     headers = [
         "Question Accuracy", "Question Distribution", "Answer Accuracy", "Answer Explanation",
-        "Tagging bloom level", "Tagging complexity level", "Distractors", "Learning Outcome",
+        "Tagging bloom level", "Tagging complexity level", "Distractors","Finalised Question Status Count","Rejected Questions", "Learning Outcome",
         "No Repetition of PR Questions", "Topic Tagging", "Language and Grammar",
         "Copy Editing"
     ]
@@ -96,7 +75,11 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
                 saved_values["I"][row_idx] = cell.value
         
 
-    
+        # ——————————————————————————————
+    # Highlight & relabel rejected rows for R2/R3
+
+    # ——————————————————————————————
+
     # Define formulas
     formulas = [
     f'=IF(SUM(ISNUMBER(SEARCH("Qs:", {review_col}ROW)) + ISNUMBER(SEARCH("QA:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
@@ -106,11 +89,14 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
     f'=IF(SUM(ISNUMBER(SEARCH("Bloom:", {review_col}ROW)) + ISNUMBER(SEARCH("BT:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("Comp:", {review_col}ROW)) + ISNUMBER(SEARCH("CT:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("Dis:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
+    f'=IF(LOWER(TRIM({review_status_col}ROW)) = "closed", "Yes", "No")',
+    f'=IF(ISNUMBER(SEARCH("Reject", {review_status_col}ROW)), "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("LO:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("Repq:", {review_col}ROW)) + ISNUMBER(SEARCH("QR:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("TopicT:", {review_col}ROW)) + ISNUMBER(SEARCH("TT:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("Lang:", {review_col}ROW)) + ISNUMBER(SEARCH("LG:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")',
     f'=IF(SUM(ISNUMBER(SEARCH("Ced:", {review_col}ROW)) + ISNUMBER(SEARCH("CE:", {review_col}ROW)) + ISNUMBER(SEARCH("Reject:", {review_col}ROW)))>0, "No", "Yes")'
+    
 ]
 
     # Apply formulas to the specified range
@@ -151,7 +137,27 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
         sheet[f"{col_letter}{count_row}"] = countif_formula
         sheet[f"{col_letter}{percentage_row}"] = percentage_formula
 
+    from openpyxl.styles import PatternFill
+    dark_blue = PatternFill("solid", fgColor="00008B")
+    prev_label = None
+    if Rev == "R2":
+        prev_label = "Rejected R1"
+    elif Rev == "R3":
+        prev_label = "Rejected R2"
 
+    if prev_label:
+        max_col = sheet.max_column
+        for row_idx in range(start_row, end_row + 1):
+            status_cell = sheet[f"{review_status_col}{row_idx}"]
+            if status_cell.value and "Reject" in str(status_cell.value):
+                # blank out criteria columns
+                for c in range(start_col_index, end_col_index+1):
+                    sheet.cell(row=row_idx, column=c).value = None
+                # highlight the entire row
+                for col in range(1, max_col+1):
+                    sheet.cell(row=row_idx, column=col).fill = dark_blue
+                # overwrite the status text
+                status_cell.value = prev_label
     # Save workbook
     # Copy additional sheets from AQR file
     aqr_wb = load_workbook('AMT_AQR.xlsx')
@@ -238,33 +244,52 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev):
         for row_idx, value in saved_values["I"].items():
             if value is not None:
                 rubrics_sheet[f"I{row_idx}"].value = value
-    current_row = 4  # Start row for the target sheets
+    
+    total_questions = end_row - start_row + 1
+    current_row = 4
+    formula_index = 0
+    skip_rows = [13, 18]
+
     for col_idx in range(start_col_index, end_col_index + 1):
         col_letter = get_column_letter(col_idx)
-        
-        # Skip row 13 but adjust the mapping
-        if current_row == 11:
+
+        # 1) Skip your two blank rows
+        while current_row in skip_rows:
             current_row += 1
-        if current_row == 16:
-            current_row += 1
-        
-        # Add formula linking percentage to the target sheets
-        rubrics_sheet[f"{RubSheetCol}{current_row}"] = (
+
+        # 2) Pick the right formula for this header index
+        if formula_index == 7:
+            # Finalised Question Status Count → row 11
+            formula = (
                 f"=IFERROR("
-                f"IF({sheet.title}!{col_letter}{percentage_row} <= 30, 1, "
-                f"IF({sheet.title}!{col_letter}{percentage_row} <= 50, 2, "
-                f"IF({sheet.title}!{col_letter}{percentage_row} <= 70, 3, "
-                f"IF({sheet.title}!{col_letter}{percentage_row} <= 90, 4, 5)))), \"\")"
-        )
-        report_sheet[f"{RepSheetCol}{current_row}"] = (
+                f"IF({sheet.title}!{col_letter}{percentage_row} > 94, 5, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} >= 86, 4, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} >= 84, 3, 1))), \"\")"
+            )
+        elif formula_index == 8:
+            # Rejected Questions → row 12
+            formula = (
+                f"=IFERROR("
+                f"IF({sheet.title}!{col_letter}{percentage_row} = 0, 5, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 20, 2, 1)), \"\")"
+            )
+        else:
+            # All the other 12 criteria
+            formula = (
                 f"=IFERROR("
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 30, 1, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 50, 2, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 70, 3, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 90, 4, 5)))), \"\")"
             )
-        
-        current_row += 1  # Move to the next row in the target sheets
+
+        # 3) Write into both AQR Rubrics & Report Format
+        rubrics_sheet[f"{RubSheetCol}{current_row}"] = formula
+        report_sheet[f"{RepSheetCol}{current_row}"] = formula
+
+        # advance to next
+        current_row += 1
+        formula_index += 1
 
 
 
@@ -292,6 +317,7 @@ if uploaded_file:
     col_range = st.text_input("Enter Criteria Column Range (e.g., A-Z):")
     row_range = st.text_input("Enter Row Range (e.g., 3-38):")
     review_col = st.text_input("Enter Review Specific Comment Column (e.g., AK):")
+    review_status_col = st.text_input("Enter Review Specific status Column (e.g., AK):")
     target_column_selection = st.selectbox("Select R1, R2, or R3:", ["R1", "R2", "R3"])
     if st.button("Apply Formula"):
         if col_range and row_range and review_col:
@@ -303,7 +329,7 @@ if uploaded_file:
 
             try:
                 # Apply formulas and generate the output file
-                output_path = apply_formulas_to_range(temp_file_path, col_range, row_range, review_col,target_column_selection)
+                output_path = apply_formulas_to_range(temp_file_path, col_range, row_range, review_col,target_column_selection,review_status_col)
 
                 # Generate output file name using uploaded file name
                 output_file_name = uploaded_file.name.replace(".xlsx", "_processed.xlsx")
