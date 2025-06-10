@@ -147,26 +147,38 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,rev
         sheet[f"{col_letter}{percentage_row}"] = percentage_formula
 
     from openpyxl.styles import PatternFill
-    dark_blue = PatternFill("solid", fgColor="00008B")
-    prev_label = None
-    if Rev == "R2":
-        prev_label = "Rejected R1"
-    elif Rev == "R3":
-        prev_label = "Rejected R2"
 
-    if prev_label:
+    if Rev == "R2":
+        fill = PatternFill("solid", fgColor="ADD8E6")   # light blue
+        new_label = "Rejected R1"
+    elif Rev == "R3":
+        fill = PatternFill("solid", fgColor="FFCCCC")   # light red
+        new_label = "Rejected R2"
+    else:
+        fill = None
+        new_label = None
+
+    if new_label and fill:
         max_col = sheet.max_column
-        for row_idx in range(start_row, end_row + 1):
-            status_cell = sheet[f"{review_status_col}{row_idx}"]
-            if status_cell.value and "Reject" in str(status_cell.value):
-                # blank out criteria columns
-                for c in range(start_col_index, end_col_index+1):
-                    sheet.cell(row=row_idx, column=c).value = None
-                # highlight the entire row
-                for col in range(1, max_col+1):
-                    sheet.cell(row=row_idx, column=col).fill = dark_blue
-                # overwrite the status text
-                status_cell.value = prev_label
+        for r in range(start_row, end_row + 1):
+            status_cell = sheet[f"{review_status_col}{r}"]
+            text = str(status_cell.value or "")
+            # already handled rows (Rejected R1 / Rejected R2) stay blank
+            if text.strip() == "Rejected R1" and Rev == "R3":
+
+                # blank criteria range
+                for c in range(start_col_index, end_col_index + 1):
+                    sheet.cell(row=r, column=c).value = None
+            if "Reject" in text and not text.startswith("Rejected"):
+                # blank criteria range
+                for c in range(start_col_index, end_col_index + 1):
+                    sheet.cell(row=r, column=c).value = None
+                # colour full row
+                for c in range(1, max_col + 1):
+                    sheet.cell(row=r, column=c).fill = fill
+                # overwrite status
+                status_cell.value = new_label
+
     # Save workbook
     # Copy additional sheets from AQR file
     aqr_wb = load_workbook('AMT_AQR.xlsx')
