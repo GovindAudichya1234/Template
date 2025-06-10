@@ -130,11 +130,20 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,rev
     count_row = end_row + 1
     percentage_row = end_row + 2
 
-    for col_idx in range(start_col_index, end_col_index + 1):
+    
+    # Replace your old loop with this:
+    for idx, col_idx in enumerate(range(start_col_index, end_col_index + 1)):
         col_letter = get_column_letter(col_idx)
-        countif_formula = f'=COUNTIF({col_letter}{start_row}:{col_letter}{end_row}, "Yes")'
-        percentage_formula = f'=({col_letter}{count_row}/{end_row - start_row + 1})*100'
-        sheet[f"{col_letter}{count_row}"] = countif_formula
+
+        # For the 9th criterion (idx==8), count "No" (i.e. rejected) instead of "Yes"
+        if idx == 8:
+            countif_formula   = f'=COUNTIF({col_letter}{start_row}:{col_letter}{end_row}, "No")'
+            percentage_formula = f'=({col_letter}{count_row}/{end_row - start_row + 1})*100'
+        else:
+            countif_formula   = f'=COUNTIF({col_letter}{start_row}:{col_letter}{end_row}, "Yes")'
+            percentage_formula = f'=({col_letter}{count_row}/{end_row - start_row + 1})*100'
+
+        sheet[f"{col_letter}{count_row}"]      = countif_formula
         sheet[f"{col_letter}{percentage_row}"] = percentage_formula
 
     from openpyxl.styles import PatternFill
@@ -277,9 +286,9 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,rev
             # All the other 12 criteria
             formula = (
                 f"=IFERROR("
-                f"IF({sheet.title}!{col_letter}{percentage_row} <= 30, 1, "
-                f"IF({sheet.title}!{col_letter}{percentage_row} <= 50, 2, "
-                f"IF({sheet.title}!{col_letter}{percentage_row} <= 70, 3, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 40, 1, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 60, 2, "
+                f"IF({sheet.title}!{col_letter}{percentage_row} <= 80, 3, "
                 f"IF({sheet.title}!{col_letter}{percentage_row} <= 90, 4, 5)))), \"\")"
             )
 
