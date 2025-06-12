@@ -338,7 +338,7 @@ if uploaded_file:
     col_range = st.text_input("Enter Criteria Column Range (e.g., A-Z):")
     row_range = st.text_input("Enter Row Range (e.g., 3-38):")
     review_col = st.text_input("Enter Review Specific Comment Column (e.g., AK):")
-    review_status_col = st.text_input("Enter Review Specific status Column (e.g., AK):")
+    review_status_col = st.text_input("Enter Review Status Column (e.g., AK):")
     target_column_selection = st.selectbox("Select R1, R2, or R3:", ["R1", "R2", "R3"])
     if st.button("Apply Formula"):
         if col_range and row_range and review_col:
