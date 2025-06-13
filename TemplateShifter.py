@@ -105,12 +105,16 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,rev
     for col_idx in range(start_col_index, end_col_index + 1):
         col_letter = get_column_letter(col_idx)
         for row_idx in range(start_row, end_row + 1):
-            # Replace "ROW" with the exact row number
-            formula = formulas[formula_index % len(formulas)]
-            formula_with_row = formula.replace("ROW", str(row_idx))
-            formula_with_review_col = formula_with_row.replace("{review_col}", review_col)
-            sheet[f"{col_letter}{row_idx}"] = formula_with_review_col
+            template = formulas[formula_index % len(formulas)]
+            filled   = (
+                template
+                .replace("ROW", str(row_idx))
+                .replace("{review_col}", review_col)
+                .replace("{review_status_col}", review_status_col)  # ← add this
+            )
+            sheet[f"{col_letter}{row_idx}"] = filled
         formula_index += 1
+
 
 
     # Add data validation for the specified range
@@ -195,7 +199,21 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,rev
                 for cell in row:
                     target_cell = target_sheet.cell(row=cell.row, column=cell.column, value=cell.value)
                     if cell.has_style:
-                        target_cell._style = cell._style
+                        from copy import copy
+
+                        for row in source_sheet.iter_rows():
+                            for cell in row:
+                                tgt = target_sheet.cell(row=cell.row,
+                                                        column=cell.column,
+                                                        value=cell.value)
+                                if cell.has_style:
+                                    tgt.font          = copy(cell.font)
+                                    tgt.border        = copy(cell.border)
+                                    tgt.fill          = copy(cell.fill)
+                                    tgt.number_format = copy(cell.number_format)
+                                    tgt.protection    = copy(cell.protection)
+                                    tgt.alignment     = copy(cell.alignment)
+
     def beautify_sheet(sheet, title_row=1):
         # Apply header formatting
         header_font = Font(bold=True, color="FFFFFF")
@@ -338,7 +356,7 @@ if uploaded_file:
     col_range = st.text_input("Enter Criteria Column Range (e.g., A-Z):")
     row_range = st.text_input("Enter Row Range (e.g., 3-38):")
     review_col = st.text_input("Enter Review Specific Comment Column (e.g., AK):")
-    review_status_col = st.text_input("Enter Review Status Column (e.g., AK):")
+    review_status_col = st.text_input("Enter Review Specific status Column (e.g., AK):")
     target_column_selection = st.selectbox("Select R1, R2, or R3:", ["R1", "R2", "R3"])
     if st.button("Apply Formula"):
         if col_range and row_range and review_col:
