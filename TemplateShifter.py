@@ -30,7 +30,7 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,rev
     # Define new headers to be written in row 2
     headers = [
         "Question Accuracy", "Question Distribution", "Answer Accuracy", "Answer Explanation",
-        "Tagging bloom level", "Tagging complexity level", "Distractors","Finalised Question Status Count","Rejected Questions", "Learning Outcome",
+        "Tagging bloom level", "Tagging complexity level", "Distractors","Finalised Question Status Count","No Rejected Questions", "Learning Outcome",
         "No Repetition of PR Questions", "Topic Tagging", "Language and Grammar",
         "Copy Editing"
     ]
@@ -341,7 +341,7 @@ def apply_formulas_to_range(file_path, col_range, row_range, review_col, Rev,rev
 st.title("Formula Application Tool with NEW AQR RUBRIC")
 st.write("Instructions for using the tool:")
 st.write("1. Upload an Excel file.")
-st.write("2. Check if the provided AMT file have all the necessary columns like Question Accuracy ,Learning Outcome Accuracy ,No Repetition of PR Question ,Question Distribution ,Answer Accuracy ,Answer Explanation Accuracy ,Tagging bloom level ,Tagging complexity level ,Distractors ,Topic Tagging ,Language and Grammar ,Copy Editing")
+st.write("2. Check if the provided AMT file have all the necessary columns like Question Accuracy ,Learning Outcome Accuracy ,No Repetition of PR Question ,Question Distribution ,Answer Accuracy ,Answer Explanation Accuracy ,Tagging bloom level ,Tagging complexity level ,Distractors,Closed Question, No Rejected Question ,Topic Tagging ,Language and Grammar ,Copy Editing")
 st.write("3. If any column is missing add the column in the AMT file before uploading and it should be in the same order as mentioned above.")
 st.write("4. Enter the column range and row range where you want to apply the formulas. (for e.g : Question Accuracy (AQ) to Copy Editing (BC) )")
 st.write("5. Enter the row range where you want to apply the formulas. (for e.g : 3 to 38)")
@@ -356,7 +356,7 @@ if uploaded_file:
     col_range = st.text_input("Enter Criteria Column Range (e.g., A-Z):")
     row_range = st.text_input("Enter Row Range (e.g., 3-38):")
     review_col = st.text_input("Enter Review Specific Comment Column (e.g., AK):")
-    review_status_col = st.text_input("Enter Review Specific status Column (e.g., AK):")
+    review_status_col = st.text_input("Enter Review Status Column (e.g., AK):")
     target_column_selection = st.selectbox("Select R1, R2, or R3:", ["R1", "R2", "R3"])
     if st.button("Apply Formula"):
         if col_range and row_range and review_col:
